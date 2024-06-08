@@ -26,7 +26,7 @@
             <h2>{{ principle_id }}.{{ descriptor.descriptor_id }}. {{ descriptor.title }}</h2>
             <hr/>
             <p>{{ descriptor.content }}</p>
-            <form action="{% url 'new_individual_descriptor' strategy_id principle_id next_descriptor %}" method="post">
+            <form action="{% url 'new_individual_descriptor' strategy_id next_principle next_descriptor %}" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="answer" id="answer"
                        {% if selected_answer %}value="{{ selected_answer.answer }}"{% endif %}>

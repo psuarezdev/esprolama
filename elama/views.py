@@ -17,7 +17,9 @@ def new_individual_principles(request: HttpRequest, strategy_id: int):
 
 
 def new_individual_descriptor(request: HttpRequest, strategy_id: int, principle_id: int, descriptor_id: int):
+    # TODO: Create a service to handle the logic of the view
     previous_principle = principle_id
+    next_principle = principle_id
     previous_descriptor = descriptor_id - 1
     next_descriptor = descriptor_id + 1
 
@@ -31,13 +33,16 @@ def new_individual_descriptor(request: HttpRequest, strategy_id: int, principle_
             previous_descriptor = last_descriptor.descriptor_id
 
     last_principle_descriptor = Descriptor.objects.filter(strategy_id=strategy_id, principle_id=principle_id).last()
-    if next_descriptor > last_principle_descriptor.descriptor_id:
+    if last_principle_descriptor is None or next_descriptor > last_principle_descriptor.descriptor_id:
         next_principle = Principle.objects.filter(strategy_id=strategy_id, principle_id__gt=principle_id).first()
 
         if next_principle is not None:
-            principle_id = next_principle.principle_id
+            next_principle = next_principle.principle_id
             first_descriptor = Descriptor.objects.filter(strategy_id=strategy_id, principle_id=principle_id).first()
             next_descriptor = first_descriptor.descriptor_id if first_descriptor is not None else 1
+        else:
+            next_principle = principle_id + 1
+            next_descriptor = 1
 
     if request.method == 'POST':
         answer = request.POST['answer'] if 'answer' in request.POST else None
@@ -88,6 +93,7 @@ def new_individual_descriptor(request: HttpRequest, strategy_id: int, principle_
         'descriptor': descriptor,
         'selected_answer': selected_answer,
         'previous_principle': previous_principle,
+        'next_principle': next_principle,
         'previous_descriptor': previous_descriptor,
         'next_descriptor': next_descriptor,
     })
