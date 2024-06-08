@@ -1,0 +1,15 @@
+<button
+        class="
+            btn
+            {% if selected_answer and selected_answer == answer_number %}
+            btn-success
+            {% else %}
+            btn-outline-success
+            {% endif %}
+        "
+        type="button"
+        style="width: 100px;"
+>
+
+    {{ answer_number }}
+</button>

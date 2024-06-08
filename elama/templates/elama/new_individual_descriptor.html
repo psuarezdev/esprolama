@@ -1,0 +1,78 @@
+{% extends "elama/layouts/main-layout.html" %}
+
+{% block title %}
+    Autoevaluación individual
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div id="alerts"></div>
+        <header class="d-flex align-items-center justify-content-between">
+            <h1>{{ principle_id }}. {{ descriptor.principle.title }}</h1>
+            <nav class="d-flex align-items-center gap-3">
+                {% if principle_id == 1 and previous_descriptor == 0 %}
+                    <a class="btn btn-outline-secondary mb-3"
+                       href="{% url 'new_individual_principles' descriptor.principle.strategy.id %}">Volver</a>
+                {% else %}
+                    <a id="previous-page" class="btn btn-outline-primary mb-3"
+                       href="{% url 'new_individual_descriptor' strategy_id previous_principle previous_descriptor %}">
+                        Anterior
+                    </a>
+                {% endif %}
+                <button type="button" id="next-page" class="btn btn-outline-primary mb-3">Siguiente</button>
+            </nav>
+        </header>
+        <article class="card p-4 mt-4">
+            <h2>{{ principle_id }}.{{ descriptor.descriptor_id }}. {{ descriptor.title }}</h2>
+            <hr/>
+            <p>{{ descriptor.content }}</p>
+            <form action="{% url 'new_individual_descriptor' strategy_id principle_id next_descriptor %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="answer" id="answer"
+                       {% if selected_answer %}value="{{ selected_answer.answer }}"{% endif %}>
+                <div class="d-flex align-items-center gap-2" id="asnwer-buttons">
+                    {% include 'elama/components/answer_button.html' with answer_number=1 selected_answer=selected_answer.answer %}
+                    {% include 'elama/components/answer_button.html' with answer_number=2 selected_answer=selected_answer.answer %}
+                    {% include 'elama/components/answer_button.html' with answer_number=3 selected_answer=selected_answer.answer %}
+                    {% include 'elama/components/answer_button.html' with answer_number=4 selected_answer=selected_answer.answer %}
+                </div>
+            </form>
+        </article>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const alerts = document.getElementById('alerts');
+            const answer = document.getElementById('answer');
+            const buttons = document.querySelectorAll('#asnwer-buttons button');
+            const nextPageBtn = document.getElementById('next-page');
+
+            nextPageBtn.addEventListener('click', (e) => {
+                if (!answer.value || answer.value.trim().length === 0) {
+                    e.preventDefault();
+                    alerts.innerHTML = `
+                        {%  include 'elama/components/alert.html' with alert_type="danger" title="Error" content="Por favor, selecciona una respuesta antes de continuar." %}
+                    `;
+                    return;
+                }
+
+                document.querySelector('form').submit();
+            });
+
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    buttons.forEach(b => {
+                        b.classList.remove('btn-success');
+                        b.classList.add('btn-outline-success');
+                    });
+
+                    button.classList.remove('btn-outline-success');
+                    button.classList.add('btn-success');
+                    answer.value = button.textContent.trim();
+                });
+            });
+        });
+    </script>
+{% endblock %}

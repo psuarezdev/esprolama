@@ -1,0 +1,46 @@
+{% extends "elama/layouts/main-layout.html" %}
+
+{% block title %}
+    Autoevaluación individual
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div id="prueba"></div>
+        <header class="position-relative mb-3">
+            <a class="btn btn-outline-secondary position-absolute float-left" href="{% url 'new_individual' %}">Volver</a>
+            <h1 class="text-center">{{ strategy_id }}ª estrategia - Principios</h1>
+        </header>
+        {% for principle in principles %}
+            <div class="accordion" id="accordionPrinciple{{ principle.id }}">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapsePrinciple{{ principle.id }}" aria-expanded="true"
+                                aria-controls="collapsePrinciple{{ principle.id }}">
+                            {{ principle.principle_id }}. {{ principle.title }}
+                        </button>
+                    </h2>
+                    <div id="collapsePrinciple{{ principle.id }}"
+                         class="accordion-collapse collapse {% if principle.descriptor_set.all|length > 0 %}show{% endif %}"
+                         data-bs-parent="#accordionPrinciple{{ principle.id }}">
+                        <div class="accordion-body">
+                            {% if principle.descriptor_set.all|length > 0 %}
+                                {% for descriptor in principle.descriptor_set.all %}
+                                    <div>
+                                        {{ principle.principle_id }}.{{ descriptor.descriptor_id }}.
+                                        <a href="{% url 'new_individual_descriptor' strategy_id principle.id descriptor.descriptor_id %}">
+                                            {{ descriptor.title }}
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p>No hay descriptores asociados a este principio.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
