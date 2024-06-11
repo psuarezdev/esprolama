@@ -1,4 +1,4 @@
-{% extends "./layouts/main-layout.html" %}
+{% extends "elama/layouts/base.html" %}
 
 {% block title %}
     Autoevaluación individual
@@ -8,10 +8,10 @@
     <div class="container mt-5">
         <h1 class="text-center mb-4">Estrategías</h1>
         <ol class="list-group list-group-numbered">
-            {% for strategy in strategies %}
+            {% for estrategia in estrategias %}
                 <li class="list-group-item">
-                    <a href="{% url 'new_individual_principles' strategy.id %}">
-                        {{ strategy.title }}
+                    <a href="{% url 'elama:nuevo_individual_principios' autoevaluacion_id estrategia.id %}">
+                        {{ estrategia.titulo }}
                     </a>
                 </li>
             {% endfor %}

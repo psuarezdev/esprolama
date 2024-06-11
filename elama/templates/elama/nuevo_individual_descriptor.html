@@ -1,0 +1,86 @@
+{% extends "elama/layouts/base.html" %}
+
+{% block titulo %}
+    Autoevaluación individual
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div id="alertas"></div>
+        <header class="d-flex align-items-center justify-content-between">
+            <h1>{{ descriptor.principio.codigo }}. {{ descriptor.principio.titulo }}</h1>
+            <nav class="d-flex align-items-center gap-3">
+                {% if descriptor.principio.codigo == 1 and descriptor_anterior == 0 %}
+                    <a class="btn btn-outline-secondary mb-3"
+                       href="{% url 'elama:nuevo_individual_principios' autoevaluacion_id descriptor.principio.estrategia_id %}">Volver</a>
+                {% else %}
+                    <a id="previous-page" class="btn btn-outline-primary mb-3"
+                       href="{% url 'elama:nuevo_individual_descriptor' autoevaluacion_id descriptor.principio.estrategia_id principio_anterior descriptor_anterior %}">
+                        Anterior
+                    </a>
+                {% endif %}
+                <button type="button" id="siguiente" class="btn btn-outline-primary mb-3">
+                    {% if es_ultimo %}
+                        Finalizar
+                    {% else %}
+                        Siguiente
+                    {% endif %}
+                </button>
+            </nav>
+        </header>
+        <article class="card p-4 mt-4">
+            <h2>{{ descriptor.principio.codigo }}.{{ descriptor.codigo }}. {{ descriptor.titulo }}</h2>
+            <hr/>
+            <p class="fs-5">{{ descriptor.contenido }}</p>
+            <form action="{% url 'elama:nuevo_individual_descriptor' autoevaluacion_id descriptor.principio.estrategia_id principio_siguiente descriptor_siguiente %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="respuesta" id="respuesta" />
+                <div class="d-flex align-items-center gap-2" id="botones-respuestas">
+                    {% for opcion in form.respuesta %}
+                        {% include 'elama/components/boton_respuesta.html' with opcion=opcion.data.value seleccionado=opcion.data.selected %}
+                    {% endfor %}
+                </div>
+            </form>
+        </article>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const alertas = document.getElementById('alertas');
+            const respuesta = document.getElementById('respuesta');
+            const botones = document.querySelectorAll('#botones-respuestas button');
+            const siguiente = document.getElementById('siguiente');
+
+            siguiente.addEventListener('click', (e) => {
+                if (!respuesta.value || respuesta.value.trim().length === 0) {
+                    e.preventDefault();
+                    alertas.innerHTML = `
+                        {%  include 'elama/components/alerta.html' with tipo_alerta="danger" titulo="Error" contenido="Por favor, selecciona una respuesta antes de continuar." %}
+                    `;
+                    return;
+                }
+
+                document.querySelector('form').submit();
+            });
+
+            botones.forEach(button => {
+                if(button.classList.contains('btn-success')) {
+                    respuesta.value = button.textContent.trim();
+                }
+
+                button.addEventListener('click', () => {
+                    botones.forEach(b => {
+                        b.classList.remove('btn-success');
+                        b.classList.add('btn-outline-success');
+                    });
+
+                    button.classList.remove('btn-outline-success');
+                    button.classList.add('btn-success');
+                    respuesta.value = button.textContent.trim();
+                });
+            });
+        });
+    </script>
+{% endblock %}

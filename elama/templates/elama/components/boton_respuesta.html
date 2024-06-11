@@ -1,7 +1,7 @@
 <button
         class="
             btn
-            {% if selected_answer and selected_answer == answer_number %}
+            {% if seleccionado %}
             btn-success
             {% else %}
             btn-outline-success
@@ -11,5 +11,5 @@
         style="width: 100px;"
 >
 
-    {{ answer_number }}
+    {{ opcion }}
 </button>

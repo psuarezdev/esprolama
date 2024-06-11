@@ -1,0 +1,48 @@
+{% extends "elama/layouts/base.html" %}
+
+{% block title %}
+    Autoevaluación individual
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <header class="position-relative mb-3">
+            <a class="btn btn-outline-secondary position-absolute float-left"
+               href="{% url 'elama:nuevo_individual' autoevaluacion_id %}">Volver</a>
+            <h1 class="text-center">{{ estrategia_id }}ª Estrategia - Principios</h1>
+        </header>
+        <section class="d-flex flex-column align-items-center justify-content-center gap-3">
+            {% for principio in principios %}
+                <div class="accordion w-100" id="accordionprincipio{{ principio.id }}">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseprincipio{{ principio.id }}" aria-expanded="true"
+                                    aria-controls="collapseprincipio{{ principio.id }}">
+                                {{ principio.codigo }}. {{ principio.titulo }}
+                            </button>
+                        </h2>
+                        <div id="collapseprincipio{{ principio.id }}"
+                             class="accordion-collapse collapse {% if principio.descriptor_set.all|length > 0 %}show{% endif %}"
+                             data-bs-parent="#accordionprincipio{{ principio.id }}">
+                            <div class="accordion-body">
+                                {% if principio.descriptor_set.all|length > 0 %}
+                                    {% for descriptor in principio.descriptor_set.all %}
+                                        <div>
+                                            {{ principio.codigo }}.{{ descriptor.codigo }}.
+                                        	<a href="{% url 'elama:nuevo_individual_descriptor' autoevaluacion_id estrategia_id principio.codigo descriptor.codigo  %}">
+                                                {{ descriptor.titulo }}
+                                            </a>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p>No hay descriptores asociados a este principio.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </section>
+    </div>
+{% endblock %}

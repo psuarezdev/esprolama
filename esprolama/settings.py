@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "elama.apps.ElamaConfig"
+    'elama.apps.ElamaConfig',
 ]
 
 MIDDLEWARE = [

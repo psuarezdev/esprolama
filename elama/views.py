@@ -1,99 +1,89 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest, HttpResponse
-from .models import Strategy, Principle, Descriptor, Individual
+from .models import Estrategia, Principio, Descriptor, Volcado, Autoevaluacion
+from .services.individual_service import IndividualService
+from .forms import volcado_form
 
 
-def new_individual(request: HttpRequest):
-    strategies = Strategy.objects.all()
-    return render(request, 'elama/new_individual.html', {'strategies': strategies})
-
-
-def new_individual_principles(request: HttpRequest, strategy_id: int):
-    principles = Principle.objects.filter(strategy_id=strategy_id)
-    return render(request, 'elama/new_individual_principles.html', {
-        'strategy_id': strategy_id,
-        'principles': principles
+def nuevo_individual(request: HttpRequest, autoevaluacion_id: int):
+    estrategias = Estrategia.objects.all()
+    return render(request, 'elama/nuevo_individual.html', {
+        'autoevaluacion_id': autoevaluacion_id,
+        'estrategias': estrategias
     })
 
 
-def new_individual_descriptor(request: HttpRequest, strategy_id: int, principle_id: int, descriptor_id: int):
-    # TODO: Create a service to handle the logic of the view
-    previous_principle = principle_id
-    next_principle = principle_id
-    previous_descriptor = descriptor_id - 1
-    next_descriptor = descriptor_id + 1
+def nuevo_individual_principios(request: HttpRequest, autoevaluacion_id: int, estrategia_id: int):
+    principios = Principio.objects.filter(estrategia_id=estrategia_id)
+    return render(request, 'elama/nuevo_individual_principios.html', {
+        'autoevaluacion_id': autoevaluacion_id,
+        'estrategia_id': estrategia_id,
+        'principios': principios,
+    })
 
-    if previous_descriptor == 0:
-        last_descriptor = Descriptor.objects.filter(
-            strategy_id=strategy_id, principle_id__lt=principle_id
-        ).last()
 
-        if last_descriptor is not None:
-            previous_principle = last_descriptor.principle_id
-            previous_descriptor = last_descriptor.descriptor_id
+def nuevo_individual_descriptor(
+        request: HttpRequest, autoevaluacion_id: int, estrategia_id: int, principio_codigo: int, descriptor_codigo: int
+):
+    # TODO: Arreglar finalizar
+    # TODO: preguntar a Juan Pablo si el uso del formulario en el html es correcto
+    descriptor = get_object_or_404(
+        Descriptor,
+        principio__estrategia_id=estrategia_id,
+        principio__codigo=principio_codigo,
+        codigo=descriptor_codigo
+    )
 
-    last_principle_descriptor = Descriptor.objects.filter(strategy_id=strategy_id, principle_id=principle_id).last()
-    if last_principle_descriptor is None or next_descriptor > last_principle_descriptor.descriptor_id:
-        next_principle = Principle.objects.filter(strategy_id=strategy_id, principle_id__gt=principle_id).first()
-
-        if next_principle is not None:
-            next_principle = next_principle.principle_id
-            first_descriptor = Descriptor.objects.filter(strategy_id=strategy_id, principle_id=principle_id).first()
-            next_descriptor = first_descriptor.descriptor_id if first_descriptor is not None else 1
-        else:
-            next_principle = principle_id + 1
-            next_descriptor = 1
+    paginacion = IndividualService.descriptor_paginacion(estrategia_id, principio_codigo, descriptor_codigo)
+    ultimo_principio = Principio.objects.filter(estrategia_id=estrategia_id).last()
+    ultimo_descriptor = Descriptor.objects.filter(
+        principio__estrategia_id=estrategia_id, principio_id=ultimo_principio.id
+    ).last()
+    es_ultimo = descriptor.principio.codigo == ultimo_principio.codigo and descriptor.codigo == ultimo_descriptor.codigo
 
     if request.method == 'POST':
-        answer = request.POST['answer'] if 'answer' in request.POST else None
-
-        if answer is None:
-            return redirect('new_individual_principles', strategy_id=strategy_id)
-
-        individual = Individual.objects.filter(
-            user_id=1,  # TODO: Change this to the authenticated user
-            strategy_id=strategy_id,
-            principle_id=previous_principle,
-            descriptor_id=previous_descriptor,
+        volcado = Volcado.objects.filter(
+            autoevaluacion_id=autoevaluacion_id,
+            descriptor__principio__estrategia_id=estrategia_id,
+            descriptor__principio__codigo=paginacion['principio_anterior'],
+            descriptor__codigo=paginacion['descriptor_anterior'],
         ).first()
 
-        if individual is not None and individual.answer != answer:
-            individual.answer = answer
-            individual.save()
-        elif individual is None:
-            Individual(
-                answer=answer,
-                user_id=1,  # TODO: Change this to the authenticated user
-                strategy_id=strategy_id,
-                principle_id=previous_principle,
-                descriptor_id=previous_descriptor,
-            ).save()
+        if volcado is not None:
+            form = volcado_form.VolcadoForm(instance=volcado, data=request.POST)
+            if form.is_valid():
+                form.save()
+        else:
+            form = volcado_form.VolcadoForm(data=request.POST)
+            if form.is_valid():
+                descriptor_anterior = Descriptor.objects.filter(
+                    principio__estrategia_id=estrategia_id,
+                    principio__codigo=paginacion['principio_anterior'],
+                    codigo=paginacion['descriptor_anterior'],
+                ).first()
 
-        last_principle = Principle.objects.filter(strategy_id=strategy_id).last()
-        last_descriptor = Descriptor.objects.filter(principle_id=last_principle.principle_id).last()
+                volcado = form.save(commit=False)
+                volcado.autoevaluacion_id = autoevaluacion_id
+                volcado.descriptor = descriptor_anterior
+                volcado.save()
 
-        if previous_principle == last_principle.principle_id and previous_descriptor == last_descriptor.descriptor_id:
-            Individual.objects.filter(
-                user_id=1,  # TODO: Change this to the authenticated user
-                strategy_id=strategy_id,
-            ).update(confirmed=True)
 
-            return redirect('new_individual')
-
-    descriptor = get_object_or_404(
-        Descriptor, strategy_id=strategy_id, principle_id=principle_id, descriptor_id=descriptor_id
-    )
-    selected_answer = Individual.objects.filter(
-        user_id=1, strategy_id=strategy_id, principle_id=principle_id, descriptor_id=descriptor_id,
+    volcado = Volcado.objects.filter(
+        autoevaluacion_id=autoevaluacion_id,
+        descriptor__principio__estrategia_id=estrategia_id,
+        descriptor__principio__codigo=principio_codigo,
+        descriptor__codigo=descriptor_codigo,
     ).first()
 
-    return render(request, 'elama/new_individual_descriptor.html', {
-        'strategy_id': strategy_id,
-        'principle_id': principle_id,
+    if volcado is not None:
+        form = volcado_form.VolcadoForm(instance=volcado)
+    else:
+        form = volcado_form.VolcadoForm()
+
+    return render(request, 'elama/nuevo_individual_descriptor.html', {
+        'autoevaluacion_id': autoevaluacion_id,
         'descriptor': descriptor,
-        'selected_answer': selected_answer,
-        'previous_principle': previous_principle,
-        'next_principle': next_principle,
-        'previous_descriptor': previous_descriptor,
-        'next_descriptor': next_descriptor,
+        'form': form,
+        'es_ultimo': es_ultimo,
+        **paginacion,
     })
