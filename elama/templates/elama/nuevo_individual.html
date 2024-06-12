@@ -5,16 +5,52 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container mt-5">
+    <section class="container mt-5">
         <h1 class="text-center mb-4">Estrategías</h1>
-        <ol class="list-group list-group-numbered">
+        <article class="d-flex flex-column align-items-center justify-content-center gap-3">
             {% for estrategia in estrategias %}
-                <li class="list-group-item">
-                    <a href="{% url 'elama:nuevo_individual_principios' autoevaluacion_id estrategia.id %}">
-                        {{ estrategia.titulo }}
-                    </a>
-                </li>
+                <div class="accordion w-100" id="accordionEstrategia{{ estrategia.id }}">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseEstrategia{{ estrategia.id }}" aria-expanded="true"
+                                    aria-controls="collapseEstrategia{{ estrategia.id }}">
+                                {{ estrategia.titulo }}
+                            </button>
+                        </h2>
+                        <div id="collapseEstrategia{{ estrategia.id }}"
+                             class="accordion-collapse collapse {% if estrategia.principio_set.all|length > 0 %}show{% endif %}"
+                             data-bs-parent="#accordionEstrategia{{ estrategia.id }}">
+                            <div class="accordion-body">
+                                {% if estrategia.principio_set.all|length > 0 %}
+                                    <ul class="list-unstyled">
+                                        {% for principio in  estrategia.principio_set.all %}
+                                            <li>
+                                                {{ principio.titulo }}
+                                                <ul class="list-unstyled ms-3">
+                                                    {% if principio.descriptor_set.all|length > 0 %}
+                                                         {% for descriptor in principio.descriptor_set.all %}
+                                                             <li>
+                                                                <a href="{% url 'elama:nuevo_individual_descriptor' autoevaluacion_id descriptor.id %}">
+                                                                    {{ forloop.parentloop.counter }}.{{ descriptor.titulo }}
+                                                                </a>
+                                                             </li>
+                                                         {% endfor %}
+                                                    {% else %}
+                                                        No hay descriptores asociados a el principio
+                                                    {% endif %}
+                                                </ul>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p>No hay principios asociados a la estrategia.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
-        </ol>
-    </div>
+        </article>
+    </section>
 {% endblock %}

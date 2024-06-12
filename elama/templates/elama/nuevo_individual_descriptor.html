@@ -8,35 +8,35 @@
     <div class="container mt-5">
         <div id="alertas"></div>
         <header class="d-flex align-items-center justify-content-between">
-            <h1>{{ descriptor.principio.codigo }}. {{ descriptor.principio.titulo }}</h1>
-            <nav class="d-flex align-items-center gap-3">
-                {% if descriptor.principio.codigo == 1 and descriptor_anterior == 0 %}
-                    <a class="btn btn-outline-secondary mb-3"
-                       href="{% url 'elama:nuevo_individual_principios' autoevaluacion_id descriptor.principio.estrategia_id %}">Volver</a>
-                {% else %}
-                    <a id="previous-page" class="btn btn-outline-primary mb-3"
-                       href="{% url 'elama:nuevo_individual_descriptor' autoevaluacion_id descriptor.principio.estrategia_id principio_anterior descriptor_anterior %}">
-                        Anterior
-                    </a>
-                {% endif %}
-                <button type="button" id="siguiente" class="btn btn-outline-primary mb-3">
-                    {% if es_ultimo %}
-                        Finalizar
-                    {% else %}
-                        Siguiente
-                    {% endif %}
+            <h1>{{ descriptor.principio.titulo }}</h1>
+            <nav class="d-flex align-items-center gap-3 mb-3">
+                <a
+                        href="
+                            {% if  es_primero %}
+                            	{% url 'elama:nuevo_individual' autoevaluacion_id %}
+                            {% else %}
+                                {% url 'elama:nuevo_individual_descriptor' autoevaluacion_id anterior_descriptor.id %}
+                            {% endif %}
+                        "
+                        class="btn btn-outline-secondary"
+                >
+                    {% if es_primero %}Volver{% else %}Anterior{% endif %}
+                </a>
+                <button type="button" id="siguiente" class="btn btn-outline-primary">
+                    {% if es_ultimo %}Guardar{% else %}Siguiente{% endif %}
                 </button>
             </nav>
         </header>
         <article class="card p-4 mt-4">
-            <h2>{{ descriptor.principio.codigo }}.{{ descriptor.codigo }}. {{ descriptor.titulo }}</h2>
+            <h2>{{ codigo_principio }}.{{ descriptor.titulo }}</h2>
             <hr/>
             <p class="fs-5">{{ descriptor.contenido }}</p>
-            <form action="{% url 'elama:nuevo_individual_descriptor' autoevaluacion_id descriptor.principio.estrategia_id principio_siguiente descriptor_siguiente %}" method="post">
+            <form action="{% url 'elama:nuevo_individual_descriptor' autoevaluacion_id siguiente_descriptor.id %}"
+                  method="post">
                 {% csrf_token %}
                 <div class="d-flex align-items-center gap-2" id="id_respuesta">
-                     {% for opcion in form.respuesta %}
-                         <div>
+                    {% for opcion in form.respuesta %}
+                        <div>
                             <input
                                     type="radio"
                                     class="btn-check"
@@ -44,7 +44,7 @@
                                     id="id_respuesta_{{ opcion.data.value }}"
                                     value="{{ opcion.data.value }}"
                                     {% if form.instance.respuesta and form.instance.respuesta|floatformat:0 == opcion.data.value|floatformat:0 %}
-                                        checked
+                                    checked
                                     {% endif %}
                             />
                             <label
@@ -54,7 +54,7 @@
                             >
                                 {{ opcion.data.value }}
                             </label>
-                         </div>
+                        </div>
                     {% endfor %}
                 </div>
             </form>
@@ -69,9 +69,9 @@
             const opciones = document.querySelectorAll('input[type=radio]');
             const siguiente = document.getElementById('siguiente');
 
-            siguiente.addEventListener('click', (e) => {
+            siguiente.addEventListener('click', () => {
                 const opcionSeleccionada = Array.from(opciones).filter(opcion => opcion.checked);
-                if(opcionSeleccionada.length === 0) {
+                if (opcionSeleccionada.length === 0) {
                     alertas.innerHTML = `
                         {% include 'elama/components/alerta.html' with tipo_alerta="danger" titulo="Error" contenido="Selecciona una opción antes de continuar" %}
                     `;

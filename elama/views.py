@@ -13,48 +13,43 @@ def nuevo_individual(request: HttpRequest, autoevaluacion_id: int):
     })
 
 
-def nuevo_individual_principios(request: HttpRequest, autoevaluacion_id: int, estrategia_id: int):
-    principios = Principio.objects.filter(estrategia_id=estrategia_id)
-    return render(request, 'elama/nuevo_individual_principios.html', {
-        'autoevaluacion_id': autoevaluacion_id,
-        'estrategia_id': estrategia_id,
-        'principios': principios,
-    })
+def nuevo_individual_descriptor(request: HttpRequest, autoevaluacion_id: int, descriptor_id: int):
+    descriptor = get_object_or_404(Descriptor, pk=descriptor_id)
 
+    es_primero = Principio.objects.filter(
+        estrategia_id=descriptor.principio.estrategia.id
+    ).first().descriptor_set.first().id == descriptor.id
+    es_ultimo = Principio.objects.filter(
+        estrategia_id=descriptor.principio.estrategia.id
+    ).last().descriptor_set.last().id == descriptor.id
 
-def nuevo_individual_descriptor(
-        request: HttpRequest, autoevaluacion_id: int, estrategia_id: int, principio_codigo: int, descriptor_codigo: int
-):
-    paginacion = IndividualService.descriptor_paginacion(
-        estrategia_id=estrategia_id, principio_codigo=principio_codigo, descriptor_codigo=descriptor_codigo
-    )
+    # TODO: terminar paginación -> anterior_descriptor =
+    siguiente_descriptor = Descriptor.objects.filter(
+        principio__estrategia_id=descriptor.principio.estrategia.id,
+        principio_id=descriptor.principio.id,
+        id__gt=descriptor.id
+    ).first()
 
-    ultimo_principio = Principio.objects.filter(estrategia_id=estrategia_id).last()
-    ultimo_descriptor = Descriptor.objects.filter(
-        principio__estrategia_id=estrategia_id, principio_id=ultimo_principio.id
-    ).last()
+    if es_ultimo:
+        siguiente_descriptor = descriptor
 
-    # TODO: Mover esto al servicio -> IndividualService
-    if request.method == 'POST':
-        IndividualService.crear_volcado(
-            data=request.POST, autoevaluacion_id=autoevaluacion_id, estrategia_id=estrategia_id, paginacion=paginacion
-        )
+    if not es_ultimo and siguiente_descriptor is None:
+        siguiente_principio = Principio.objects.filter(
+            estrategia_id=descriptor.principio.estrategia.id,
+            id__gt=descriptor.principio.id,
+        ).first()
 
-        if (ultimo_principio.codigo == paginacion['principio_anterior']
-                and ultimo_descriptor.codigo == paginacion['descriptor_anterior']):
+        if siguiente_principio is None:
             return redirect('elama:nuevo_individual', autoevaluacion_id)
 
-    descriptor = Descriptor.objects.filter(
-        principio__estrategia_id=estrategia_id,
-        principio__codigo=principio_codigo,
-        codigo=descriptor_codigo
-    ).first()
+        siguiente_descriptor = Descriptor.objects.filter(
+            principio__estrategia_id=descriptor.principio.estrategia.id,
+            principio_id=siguiente_principio.id,
+        ).first()
 
     volcado = Volcado.objects.filter(
         autoevaluacion_id=autoevaluacion_id,
-        descriptor__principio__estrategia_id=estrategia_id,
-        descriptor__principio__codigo=principio_codigo,
-        descriptor__codigo=descriptor_codigo,
+        descriptor_id=descriptor.id,
     ).first()
 
     if volcado is not None:
@@ -64,9 +59,10 @@ def nuevo_individual_descriptor(
 
     return render(request, 'elama/nuevo_individual_descriptor.html', {
         'autoevaluacion_id': autoevaluacion_id,
-        'descriptor': descriptor,
+        'codigo_principio': descriptor.principio.titulo.split('.')[0],
         'form': form,
-        'es_ultimo': (ultimo_principio.codigo < paginacion['principio_siguiente']
-                        and ultimo_descriptor.codigo > paginacion['descriptor_siguiente']),
-        **paginacion,
+        'descriptor': descriptor,
+        'siguiente_descriptor': siguiente_descriptor,
+        'es_primero': es_primero,
+        'es_ultimo': es_ultimo,
     })

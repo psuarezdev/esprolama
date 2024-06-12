@@ -27,29 +27,23 @@ class Estrategia(models.Model):
 
 
 class Principio(models.Model):
-    class Meta:
-        unique_together = ('codigo', 'estrategia')
-
-    codigo = models.IntegerField()
     titulo = models.CharField(max_length=200)
     estrategia = models.ForeignKey(Estrategia, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'Estrategia {self.estrategia.id} Principio {self.codigo}'
+        return f'Estrategia {self.estrategia.id} - {self.titulo}'
 
 
 class Descriptor(models.Model):
     class Meta:
         verbose_name_plural = "Descriptores"
-        unique_together = ('codigo', 'principio')
 
-    codigo = models.IntegerField()
     titulo = models.CharField(max_length=200)
     contenido = models.TextField()
     principio = models.ForeignKey(Principio, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'Descriptor {self.codigo}, Principio {self.principio.codigo}, Estrategia {self.principio.estrategia.id}'
+        return f'Estrategia {self.principio.estrategia.id} - Principio {self.principio.id} - Descriptor {self.id}'
 
 
 class Autoevaluacion(models.Model):
