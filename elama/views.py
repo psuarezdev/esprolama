@@ -25,48 +25,30 @@ def nuevo_individual_principios(request: HttpRequest, autoevaluacion_id: int, es
 def nuevo_individual_descriptor(
         request: HttpRequest, autoevaluacion_id: int, estrategia_id: int, principio_codigo: int, descriptor_codigo: int
 ):
-    # TODO: Arreglar finalizar
-    # TODO: preguntar a Juan Pablo si el uso del formulario en el html es correcto
-    descriptor = get_object_or_404(
-        Descriptor,
-        principio__estrategia_id=estrategia_id,
-        principio__codigo=principio_codigo,
-        codigo=descriptor_codigo
+    paginacion = IndividualService.descriptor_paginacion(
+        estrategia_id=estrategia_id, principio_codigo=principio_codigo, descriptor_codigo=descriptor_codigo
     )
 
-    paginacion = IndividualService.descriptor_paginacion(estrategia_id, principio_codigo, descriptor_codigo)
     ultimo_principio = Principio.objects.filter(estrategia_id=estrategia_id).last()
     ultimo_descriptor = Descriptor.objects.filter(
         principio__estrategia_id=estrategia_id, principio_id=ultimo_principio.id
     ).last()
-    es_ultimo = descriptor.principio.codigo == ultimo_principio.codigo and descriptor.codigo == ultimo_descriptor.codigo
 
+    # TODO: Mover esto al servicio -> IndividualService
     if request.method == 'POST':
-        volcado = Volcado.objects.filter(
-            autoevaluacion_id=autoevaluacion_id,
-            descriptor__principio__estrategia_id=estrategia_id,
-            descriptor__principio__codigo=paginacion['principio_anterior'],
-            descriptor__codigo=paginacion['descriptor_anterior'],
-        ).first()
+        IndividualService.crear_volcado(
+            data=request.POST, autoevaluacion_id=autoevaluacion_id, estrategia_id=estrategia_id, paginacion=paginacion
+        )
 
-        if volcado is not None:
-            form = volcado_form.VolcadoForm(instance=volcado, data=request.POST)
-            if form.is_valid():
-                form.save()
-        else:
-            form = volcado_form.VolcadoForm(data=request.POST)
-            if form.is_valid():
-                descriptor_anterior = Descriptor.objects.filter(
-                    principio__estrategia_id=estrategia_id,
-                    principio__codigo=paginacion['principio_anterior'],
-                    codigo=paginacion['descriptor_anterior'],
-                ).first()
+        if (ultimo_principio.codigo == paginacion['principio_anterior']
+                and ultimo_descriptor.codigo == paginacion['descriptor_anterior']):
+            return redirect('elama:nuevo_individual', autoevaluacion_id)
 
-                volcado = form.save(commit=False)
-                volcado.autoevaluacion_id = autoevaluacion_id
-                volcado.descriptor = descriptor_anterior
-                volcado.save()
-
+    descriptor = Descriptor.objects.filter(
+        principio__estrategia_id=estrategia_id,
+        principio__codigo=principio_codigo,
+        codigo=descriptor_codigo
+    ).first()
 
     volcado = Volcado.objects.filter(
         autoevaluacion_id=autoevaluacion_id,
@@ -84,6 +66,7 @@ def nuevo_individual_descriptor(
         'autoevaluacion_id': autoevaluacion_id,
         'descriptor': descriptor,
         'form': form,
-        'es_ultimo': es_ultimo,
+        'es_ultimo': (ultimo_principio.codigo < paginacion['principio_siguiente']
+                        and ultimo_descriptor.codigo > paginacion['descriptor_siguiente']),
         **paginacion,
     })

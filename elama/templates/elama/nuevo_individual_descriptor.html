@@ -34,10 +34,27 @@
             <p class="fs-5">{{ descriptor.contenido }}</p>
             <form action="{% url 'elama:nuevo_individual_descriptor' autoevaluacion_id descriptor.principio.estrategia_id principio_siguiente descriptor_siguiente %}" method="post">
                 {% csrf_token %}
-                <input type="hidden" name="respuesta" id="respuesta" />
-                <div class="d-flex align-items-center gap-2" id="botones-respuestas">
-                    {% for opcion in form.respuesta %}
-                        {% include 'elama/components/boton_respuesta.html' with opcion=opcion.data.value seleccionado=opcion.data.selected %}
+                <div class="d-flex align-items-center gap-2" id="id_respuesta">
+                     {% for opcion in form.respuesta %}
+                         <div>
+                            <input
+                                    type="radio"
+                                    class="btn-check"
+                                    name="respuesta"
+                                    id="id_respuesta_{{ opcion.data.value }}"
+                                    value="{{ opcion.data.value }}"
+                                    {% if form.instance.respuesta and form.instance.respuesta|floatformat:0 == opcion.data.value|floatformat:0 %}
+                                        checked
+                                    {% endif %}
+                            />
+                            <label
+                                    class="btn btn-outline-success"
+                                    for="id_respuesta_{{ opcion.data.value }}"
+                                    style="width: 100px;"
+                            >
+                                {{ opcion.data.value }}
+                            </label>
+                         </div>
                     {% endfor %}
                 </div>
             </form>
@@ -49,38 +66,22 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const alertas = document.getElementById('alertas');
-            const respuesta = document.getElementById('respuesta');
-            const botones = document.querySelectorAll('#botones-respuestas button');
+            const opciones = document.querySelectorAll('input[type=radio]');
             const siguiente = document.getElementById('siguiente');
 
             siguiente.addEventListener('click', (e) => {
-                if (!respuesta.value || respuesta.value.trim().length === 0) {
-                    e.preventDefault();
+                const opcionSeleccionada = Array.from(opciones).filter(opcion => opcion.checked);
+                if(opcionSeleccionada.length === 0) {
                     alertas.innerHTML = `
-                        {%  include 'elama/components/alerta.html' with tipo_alerta="danger" titulo="Error" contenido="Por favor, selecciona una respuesta antes de continuar." %}
+                        {% include 'elama/components/alerta.html' with tipo_alerta="danger" titulo="Error" contenido="Selecciona una opción antes de continuar" %}
                     `;
+
                     return;
                 }
 
                 document.querySelector('form').submit();
             });
 
-            botones.forEach(button => {
-                if(button.classList.contains('btn-success')) {
-                    respuesta.value = button.textContent.trim();
-                }
-
-                button.addEventListener('click', () => {
-                    botones.forEach(b => {
-                        b.classList.remove('btn-success');
-                        b.classList.add('btn-outline-success');
-                    });
-
-                    button.classList.remove('btn-outline-success');
-                    button.classList.add('btn-success');
-                    respuesta.value = button.textContent.trim();
-                });
-            });
         });
     </script>
 {% endblock %}

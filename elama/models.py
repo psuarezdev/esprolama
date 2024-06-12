@@ -35,7 +35,7 @@ class Principio(models.Model):
     estrategia = models.ForeignKey(Estrategia, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'Estrategia {self.estrategia.id} Principio {self.id}'
+        return f'Estrategia {self.estrategia.id} Principio {self.codigo}'
 
 
 class Descriptor(models.Model):
@@ -49,7 +49,7 @@ class Descriptor(models.Model):
     principio = models.ForeignKey(Principio, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'Descriptor {self.id}, Principio {self.principio.id}, Estrategia {self.principio.estrategia.id}'
+        return f'Descriptor {self.codigo}, Principio {self.principio.codigo}, Estrategia {self.principio.estrategia.id}'
 
 
 class Autoevaluacion(models.Model):
