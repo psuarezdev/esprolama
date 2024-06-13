@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'elama.apps.ElamaConfig',
+    'bootstrap5',  # pip install django-bootstrap-v5
 ]
 
 MIDDLEWARE = [

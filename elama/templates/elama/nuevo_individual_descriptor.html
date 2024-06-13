@@ -1,8 +1,6 @@
-{% extends "elama/layouts/base.html" %}
+{% extends "elama/layouts/base-layout.html" %}
 
-{% block titulo %}
-    Autoevaluación individual
-{% endblock %}
+{% block titulo %}Autoevaluación individual{% endblock %}
 
 {% block content %}
     <div class="container mt-5">
@@ -12,18 +10,18 @@
             <nav class="d-flex align-items-center gap-3 mb-3">
                 <a
                         href="
-                            {% if  es_primero %}
-                            	{% url 'elama:nuevo_individual' autoevaluacion_id %}
+                            {% if  primer_descriptor.id == descriptor.id %}
+                            	{% url 'elama:nuevo_individual' autoevaluacion.id %}
                             {% else %}
-                                {% url 'elama:nuevo_individual_descriptor' autoevaluacion_id anterior_descriptor.id %}
+                                {% url 'elama:nuevo_individual_descriptor' autoevaluacion.id anterior_descriptor.id %}
                             {% endif %}
                         "
                         class="btn btn-outline-secondary"
                 >
-                    {% if es_primero %}Volver{% else %}Anterior{% endif %}
+                    {% if primer_descriptor.id == descriptor.id %}Volver{% else %}Anterior{% endif %}
                 </a>
                 <button type="button" id="siguiente" class="btn btn-outline-primary">
-                    {% if es_ultimo %}Guardar{% else %}Siguiente{% endif %}
+                    {% if ultimo_descriptor.id == descriptor.id %}Guardar{% else %}Siguiente{% endif %}
                 </button>
             </nav>
         </header>
@@ -31,9 +29,11 @@
             <h2>{{ codigo_principio }}.{{ descriptor.titulo }}</h2>
             <hr/>
             <p class="fs-5">{{ descriptor.contenido }}</p>
-            <form action="{% url 'elama:nuevo_individual_descriptor' autoevaluacion_id siguiente_descriptor.id %}"
-                  method="post">
+            <form action="{% url 'elama:nuevo_individual_descriptor' autoevaluacion.id siguiente_descriptor.id %}" method="post">
                 {% csrf_token %}
+                {% if ultimo_descriptor.id == descriptor.id %}
+                	<input type="hidden" name="guardar" value="1">
+                {% endif %}
                 <div class="d-flex align-items-center gap-2" id="id_respuesta">
                     {% for opcion in form.respuesta %}
                         <div>

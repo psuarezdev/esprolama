@@ -1,8 +1,6 @@
-{% extends "elama/layouts/base.html" %}
+{% extends "elama/layouts/base-layout.html" %}
 
-{% block title %}
-    Autoevaluación individual
-{% endblock %}
+{% block title %}Autoevaluación individual{% endblock %}
 
 {% block content %}
     <section class="container mt-5">
@@ -31,7 +29,7 @@
                                                     {% if principio.descriptor_set.all|length > 0 %}
                                                          {% for descriptor in principio.descriptor_set.all %}
                                                              <li>
-                                                                <a href="{% url 'elama:nuevo_individual_descriptor' autoevaluacion_id descriptor.id %}">
+                                                                <a href="{% url 'elama:nuevo_individual_descriptor' autoevaluacion.id descriptor.id %}">
                                                                     {{ forloop.parentloop.counter }}.{{ descriptor.titulo }}
                                                                 </a>
                                                              </li>
