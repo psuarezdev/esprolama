@@ -11,9 +11,12 @@ from .forms.volcado_form import VolcadoForm
 def nuevo_individual(request: HttpRequest, autoevaluacion_id: int):
     autoevaluacion = get_object_or_404(Autoevaluacion, pk=autoevaluacion_id)
     estrategias = Estrategia.objects.all()
+    volcados = Volcado.objects.filter(autoevaluacion_id=autoevaluacion.id)
+
     return render(request, 'elama/nuevo_individual.html', {
         'autoevaluacion': autoevaluacion,
-        'estrategias': estrategias
+        'estrategias': estrategias,
+        'volcados': volcados,
     })
 
 

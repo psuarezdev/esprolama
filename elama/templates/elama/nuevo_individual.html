@@ -1,10 +1,12 @@
 {% extends "elama/layouts/base-layout.html" %}
 
+{% load descriptor_filters %}
+
 {% block title %}Autoevaluación individual{% endblock %}
 
 {% block content %}
     <section class="container mt-5">
-        <h1 class="text-center mb-4">Estrategías</h1>
+        <h1 class="text-center mb-4">Estrategias</h1>
         <article class="d-flex flex-column align-items-center justify-content-center gap-3">
             {% for estrategia in estrategias %}
                 <div class="accordion w-100" id="accordionEstrategia{{ estrategia.id }}">
@@ -27,13 +29,16 @@
                                                 {{ principio.titulo }}
                                                 <ul class="list-unstyled ms-3">
                                                     {% if principio.descriptor_set.all|length > 0 %}
-                                                         {% for descriptor in principio.descriptor_set.all %}
-                                                             <li>
+                                                        {% for descriptor in principio.descriptor_set.all %}
+                                                            <li>
                                                                 <a href="{% url 'elama:nuevo_individual_descriptor' autoevaluacion.id descriptor.id %}">
                                                                     {{ forloop.parentloop.counter }}.{{ descriptor.titulo }}
                                                                 </a>
-                                                             </li>
-                                                         {% endfor %}
+                                                                {% if descriptor|descriptor_in_volcado:volcados %}
+                                                                    {% include 'elama/icons/check.html' with color="#267105" %}
+                                                                {% endif %}
+                                                            </li>
+                                                        {% endfor %}
                                                     {% else %}
                                                         No hay descriptores asociados a el principio
                                                     {% endif %}
