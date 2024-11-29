@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest
 from .models import Estrategia, Descriptor, Volcado, Autoevaluacion
-from .services.individual_service import IndividualService
-from .forms.volcado_form import VolcadoForm
+from .services import IndividualService
+from .forms import VolcadoForm
 
 # FIXME: Todo el código ha sido creado dando por hecho que la autoevaluación ya ha sido creada previamente,
 # FIXME: ya que se supone que el usuario al hacer clic en el botón para realizar la autoevaluación esta será creada
