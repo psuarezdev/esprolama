@@ -51,10 +51,15 @@ def nuevo_individual_descriptor(request: HttpRequest, autoevaluacion_id: int, de
     else:
         form = VolcadoForm()
 
+    codigo_principio = ''
+
+    if '.' in descriptor.principio.titulo:
+        descriptor.principio.titulo.split('.')[0]
+
     return render(request, 'elama/nuevo_individual_descriptor.html', {
         'autoevaluacion': autoevaluacion,
         'descriptor': descriptor,
         'form': form,
-        'codigo_principio': descriptor.principio.titulo.split('.')[0] if '.' in descriptor.principio.titulo else '',
+        'codigo_principio': codigo_principio,
         **paginacion,
     })
